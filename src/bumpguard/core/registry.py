@@ -28,3 +28,12 @@ def load_default_providers() -> None:
         register(PythonProvider())
     except Exception:  # pragma: no cover - defensive
         pass
+
+    try:
+        from ..providers.dotnet import helper as _dotnet_helper
+        from ..providers.dotnet.provider import DotNetProvider
+
+        if _dotnet_helper.dotnet_available():
+            register(DotNetProvider())
+    except Exception:  # pragma: no cover - defensive
+        pass

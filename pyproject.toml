@@ -43,6 +43,12 @@ bumpguard-mcp = "bumpguard.server:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/bumpguard"]
 
+# Ship the .NET extractor sources (built on first use); never ship build output.
+[tool.hatch.build.targets.wheel.force-include]
+"src/bumpguard/providers/dotnet/extractor/Program.cs" = "bumpguard/providers/dotnet/extractor/Program.cs"
+"src/bumpguard/providers/dotnet/extractor/UsageScanner.cs" = "bumpguard/providers/dotnet/extractor/UsageScanner.cs"
+"src/bumpguard/providers/dotnet/extractor/Extractor.csproj" = "bumpguard/providers/dotnet/extractor/Extractor.csproj"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

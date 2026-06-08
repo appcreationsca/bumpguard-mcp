@@ -65,7 +65,11 @@ def check_upgrade(
 
     result = report.to_dict()
     import_roots = set(provider.import_names(package))
-    used = any(u.dotted_path.split(".", 1)[0] in import_roots for u in usages)
+
+    def _is_used(u) -> bool:
+        return any(u.dotted_path == r or u.dotted_path.startswith(r + ".") for r in import_roots)
+
+    used = bool(report.findings) or any(_is_used(u) for u in usages)
     if not used:
         result["notes"].append(
             f"No usages of '{package}' were detected in the provided code, so this "
@@ -131,6 +135,18 @@ def verify_snippet(language: str, code: str) -> dict:
     provider = get_provider(language)
     if provider is None:
         return _no_provider(language)
+
+    if not getattr(provider, "supports_verify", True):
+        return {
+            "language": language,
+            "verified": None,
+            "findings": [],
+            "note": (
+                f"verify_snippet is not supported for {language} in this version "
+                "(accurate detection needs semantic binding). Use check_upgrade "
+                "and diff_versions instead."
+            ),
+        }
 
     findings: list[dict] = []
     info_by_top: dict[str, object] = {}

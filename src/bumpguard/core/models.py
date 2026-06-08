@@ -44,6 +44,7 @@ class Symbol:
     params: list[Param] = field(default_factory=list)
     accepts_varargs: bool = False  # *args / params-array equivalent
     accepts_kwargs: bool = False  # **kwargs / dictionary-splat equivalent
+    overloaded: bool = False  # multiple overloads share this path (skip param diff)
 
     @property
     def param_names(self) -> set[str]:
@@ -136,6 +137,7 @@ class Usage:
     call_kwargs: set[str] = field(default_factory=set)
     positional_count: int = 0
     raw: str = ""  # the source expression, for reporting
+    confidence: str = "exact"  # "exact" | "candidate" (heuristically resolved)
 
 
 @dataclass

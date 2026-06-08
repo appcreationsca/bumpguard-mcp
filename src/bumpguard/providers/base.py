@@ -27,6 +27,8 @@ class Provider(abc.ABC):
     ecosystem: str = ""
     #: Source file extensions this provider can scan, e.g. (".py",).
     file_extensions: tuple[str, ...] = ()
+    #: Whether verify_snippet is meaningful for this ecosystem.
+    supports_verify: bool = True
 
     @abc.abstractmethod
     def get_installed(self, package: str) -> InstalledInfo | None:

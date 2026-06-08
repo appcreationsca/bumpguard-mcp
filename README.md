@@ -105,10 +105,10 @@ Then ask your agent things like:
                  └───────────────────────┬──────────────────────────────┘
                                          │ Provider interface
                  ┌───────────────────────┴──────────────────────────────┐
-                 │  Python provider  │  .NET (planned) │  Java (planned) │
+                 │  Python provider  │  .NET (NuGet)   │  Java (planned) │
                  │  • AST surface    │  • DLL metadata │  • jar bytecode │
-                 │  • usage scanner  │                 │                 │
-                 │  • wheel fetch    │                 │                 │
+                 │  • usage scanner  │  • Roslyn scan  │                 │
+                 │  • wheel fetch    │  • nupkg fetch  │                 │
                  └──────────────────────────────────────────────────────┘
 ```
 
@@ -126,11 +126,20 @@ Then ask your agent things like:
 BumpGuard is built around a **pluggable provider interface**. The diff engine, breaking‑change classifier, analyzer, reporting, and MCP tools are all language‑neutral; only the *surface extraction* and *usage scanning* are ecosystem‑specific.
 
 - ✅ **Python (PyPI)** — available now.
-- 🔜 **.NET (NuGet)** — extract public API from assembly metadata.
+- ✅ **.NET (NuGet)** — available now. Reads public API from assembly metadata via reflection-only loading (no code executed); needs the **.NET SDK** (`dotnet`) on PATH. A small helper is built once on first use.
 - 🔜 **Java (Maven)** — extract from `.jar` bytecode.
 - 🔜 **JS/TS (npm)** — parse `.d.ts` declarations.
 
 Adding an ecosystem means implementing one `Provider` — see [`docs/ADD_A_PROVIDER.md`](docs/ADD_A_PROVIDER.md).
+
+### .NET specifics (v1)
+
+- Pass `language: "dotnet"`. Example: *"Before upgrading Azure.AI.OpenAI to 2.1.0, check whether my client code breaks (from_version 1.0.0-beta.17)."*
+- Supported: `check_upgrade`, `diff_versions`, `list_symbols`, `check_import`.
+- **Prefer passing `from_version`** — the "installed" baseline is taken from the NuGet global cache, which isn't your project's pinned version.
+- Reliable signal: **type / method / property removals and additions** (e.g. the `OpenAIClient` → `AzureOpenAIClient` rename is caught as a breaking removal with a suggestion). Parameter-level diffs run only for **unambiguous single-overload** members; overloaded members are tracked by presence (a documented v1 limit).
+- Fully-qualified references are reported confidently; short names resolved via `using` are reported as **lower-confidence "potentially breaking"** to avoid false hard-breaks from namespace collisions.
+- `verify_snippet` is **not supported for .NET in v1** (accurate C# hallucination detection needs semantic binding).
 
 ---
 

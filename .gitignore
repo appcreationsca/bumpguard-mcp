@@ -21,3 +21,8 @@ htmlcov/
 .idea/
 .vscode/
 *.swp
+
+# .NET extractor build artifacts
+src/bumpguard/providers/dotnet/extractor/bin/
+src/bumpguard/providers/dotnet/extractor/obj/
+src/bumpguard/providers/dotnet/extractor/_build/

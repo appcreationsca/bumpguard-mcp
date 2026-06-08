@@ -49,6 +49,7 @@ def build_upgrade_report(
             continue
         finding = _finding_for(usage, change, new)
         if finding:
+            _apply_confidence(finding, usage)
             report.findings.append(finding)
 
     # Stable, useful ordering: breaking first, then by line.
@@ -113,6 +114,17 @@ def _finding_for(usage: Usage, change: ApiChange, new: Surface) -> Finding | Non
         )
 
     return None
+
+
+def _apply_confidence(finding: Finding, usage: Usage) -> None:
+    """Heuristically-resolved usages (e.g. short C# names resolved via `using`)
+    can't be asserted as definite breakages, so cap them at potentially-breaking
+    and flag the uncertainty."""
+    if usage.confidence == "exact":
+        return
+    if finding.severity == Severity.BREAKING:
+        finding.severity = Severity.POTENTIALLY_BREAKING
+    finding.message += " (symbol resolved heuristically from the import context — verify it refers to this package)"
 
 
 def _call_break_reasons(new_sym, usage: Usage) -> list[str]:

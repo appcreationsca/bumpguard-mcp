@@ -72,6 +72,11 @@ def _diff_symbol(old: Symbol, new: Symbol) -> ApiChange | None:
     if old.kind.value not in ("function", "method", "class"):
         return None
 
+    # Overloaded members (common in .NET) can't be param-diffed reliably by a
+    # single signature, so we only track their presence, not their parameters.
+    if old.overloaded or new.overloaded:
+        return None
+
     removed_params = sorted(old.param_names - new.param_names)
     # A removed parameter only breaks *keyword* callers if **kwargs can absorb
     # it; positional breakage is decided precisely at usage-analysis time.
