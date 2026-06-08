@@ -151,7 +151,7 @@ Treat findings as **high‑signal guidance**, and absence of findings as "not pr
 ## Development
 
 ```bash
-git clone https://github.com/your-org/bumpguard-mcp
+git clone https://github.com/appcreationsca/bumpguard-mcp
 cd bumpguard-mcp
 python -m venv .venv && . .venv/Scripts/activate   # Windows
 pip install -e ".[dev]"

@@ -34,8 +34,8 @@ dependencies = ["mcp>=1.2.0"]
 dev = ["pytest>=7.0"]
 
 [project.urls]
-Homepage = "https://github.com/your-org/bumpguard-mcp"
-Issues = "https://github.com/your-org/bumpguard-mcp/issues"
+Homepage = "https://github.com/appcreationsca/bumpguard-mcp"
+Issues = "https://github.com/appcreationsca/bumpguard-mcp/issues"
 
 [project.scripts]
 bumpguard-mcp = "bumpguard.server:main"
