@@ -169,6 +169,23 @@ pytest
 
 The test suite (42 tests) runs offline using fixture packages — no network required.
 
+### Releasing
+
+Releases are automated via GitHub Actions. To cut a release:
+
+1. Bump the version in `pyproject.toml` and `src/bumpguard/__init__.py`.
+2. Move the `CHANGELOG.md` "Unreleased" notes under a new version heading.
+3. Commit, then tag and push:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The **Release** workflow runs the tests, builds the wheel + sdist, and publishes
+to PyPI via **Trusted Publishing** (OIDC — no stored tokens). The **CI** workflow
+runs the test matrix (Linux + Windows, Python 3.10/3.13) on every push and PR.
+
 ---
 
 ## License
