@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-06-08
+## [0.1.0] - 2026-06-15
 
 ### Added
 - Initial release of the **BumpGuard** MCP server.
