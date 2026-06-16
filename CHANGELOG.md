@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-15
+
+### Added
+- Published to the **Official MCP Registry** (`io.github.appcreationsca/bumpguard`)
+  via a `server.json` manifest and an automated OIDC publish step in the release
+  workflow.
+
 ## [0.1.0] - 2026-06-15
 
 ### Added
@@ -24,5 +31,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Six MCP tools: `check_upgrade`, `diff_versions`, `verify_snippet`,
   `check_import`, `list_symbols`, `list_languages`.
 
-[Unreleased]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/appcreationsca/bumpguard-mcp/releases/tag/v0.1.0

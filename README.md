@@ -1,5 +1,7 @@
 # BumpGuard 🛡️
 
+<!-- mcp-name: io.github.appcreationsca/bumpguard -->
+
 **Guard your dependency bumps.** BumpGuard is a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that tells your AI coding agent *exactly which lines of **your** code break* when you upgrade a dependency — and verifies AI‑written code against the API that is **actually installed**, so it stops calling functions that don't exist.
 
 It does this by **static analysis only**. BumpGuard never imports or executes third‑party code; it reads a package's real public API straight from its source.
