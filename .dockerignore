@@ -1,0 +1,16 @@
+.venv/
+.git/
+.github/
+dist/
+build/
+**/__pycache__/
+**/*.pyc
+*.egg-info/
+assets/
+tests/
+docs/
+CHANGELOG.md
+server.json
+src/bumpguard/providers/dotnet/extractor/_build/
+src/bumpguard/providers/dotnet/extractor/obj/
+src/bumpguard/providers/dotnet/extractor/bin/
