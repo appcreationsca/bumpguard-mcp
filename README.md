@@ -8,6 +8,12 @@ It does this by **static analysis only**. BumpGuard never imports or executes th
 
 > Docs tell your agent what *should* exist. BumpGuard tells it what *actually* exists here.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/appcreationsca/bumpguard-mcp/main/assets/demo.gif"
+       alt="BumpGuard check_upgrade demo: out of 2,015 breaking changes in pydantic 2.0, it flags the one (BaseSettings) that hits your code, with the fix"
+       width="820">
+</p>
+
 ---
 
 ## Why this exists
