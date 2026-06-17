@@ -17,6 +17,8 @@ class PythonProvider(Provider):
     file_extensions = (".py",)
 
     def get_installed(self, package: str) -> InstalledInfo | None:
+        if not package or not package.strip():
+            return None
         version = fetch.installed_version(package)
         import_name = fetch.import_name_for(package)
         located = fetch.locate_installed_source(import_name)
@@ -34,6 +36,8 @@ class PythonProvider(Provider):
         return out
 
     def get_installed_surface(self, package: str) -> Surface | None:
+        if not package or not package.strip():
+            return None
         import_name = fetch.import_name_for(package)
         located = fetch.locate_installed_source(import_name)
         if located is None:
