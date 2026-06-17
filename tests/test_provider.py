@@ -32,6 +32,31 @@ def test_verify_snippet_passes_real_stdlib_like_usage():
     assert "json" not in flagged
 
 
+def test_verify_snippet_unparseable_code_is_not_verified():
+    # Broken syntax: the scanners return nothing, which must NOT be reported as a
+    # clean "verified: true". It should surface a high-severity parse finding.
+    code = "import json\ndef (:::\n"
+    result = service.verify_snippet("python", code)
+    assert result["verified"] is False
+    assert any(f["severity"] == "high" for f in result["findings"])
+    assert any("does not parse" in f["message"] for f in result["findings"])
+
+
+def test_verify_snippet_empty_code_is_verified():
+    # An empty (or whitespace-only) snippet parses fine and has nothing to flag.
+    result = service.verify_snippet("python", "   \n")
+    assert result["verified"] is True
+    assert result["findings"] == []
+
+
+def test_python_provider_parse_error_hook():
+    from bumpguard.providers.python.provider import PythonProvider
+
+    provider = PythonProvider()
+    assert provider.parse_error("x = 1\n") is None
+    assert provider.parse_error("def (:::") is not None
+
+
 def test_unknown_language_returns_error():
     result = service.check_import("cobol", "anything")
     assert "error" in result

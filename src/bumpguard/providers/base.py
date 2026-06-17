@@ -56,6 +56,18 @@ class Provider(abc.ABC):
         override this to power import-existence / typo checks."""
         return []
 
+    def parse_error(self, code: str) -> str | None:
+        """Return a human-readable reason if ``code`` is *definitely* unparseable
+        for this ecosystem, else None.
+
+        This lets the neutral service layer avoid reporting ``verified: true`` for
+        a snippet that doesn't even parse (the scanners return no imports/usages
+        for broken code, which would otherwise look like a clean bill of health).
+        The default returns None — "parseable, or this provider has no cheap,
+        execution-free way to tell" — so it stays honest rather than guessing.
+        """
+        return None
+
     def import_names(self, package: str) -> list[str]:
         """Importable top-level name(s) for a distribution. Default: the name
         itself; providers override when import name != distribution name."""

@@ -178,13 +178,23 @@ def scan_usage(code: str, package: str | None = None) -> list[Usage]:
     return collector.usages
 
 
+def parse_error(code: str) -> str | None:
+    """Return the Python ``SyntaxError`` message if ``code`` doesn't parse, else
+    None. Used so ``verify_snippet`` doesn't report broken code as ``verified``."""
+    try:
+        ast.parse(code)
+    except SyntaxError as exc:
+        where = f" (line {exc.lineno})" if exc.lineno else ""
+        return f"{exc.msg}{where}"
+    return None
+
+
 def scan_imports(code: str) -> list[ImportRef]:
     """Return the third-party imports in ``code`` (top package + fq path)."""
     try:
         tree = ast.parse(code)
     except SyntaxError:
         return []
-
     refs: list[ImportRef] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

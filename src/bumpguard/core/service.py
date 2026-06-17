@@ -159,6 +159,29 @@ def verify_snippet(language: str, code: str) -> dict:
     info_by_top: dict[str, object] = {}
     surfaces: dict[str, object] = {}
 
+    # Short-circuit on code that doesn't even parse: the scanners return no
+    # imports/usages for broken code, which would otherwise be reported as a
+    # clean "verified: true". Surface it honestly instead.
+    perr = provider.parse_error(code)
+    if perr:
+        return {
+            "language": language,
+            "verified": False,
+            "findings": [
+                {
+                    "line": 0,
+                    "severity": "high",
+                    "symbol": None,
+                    "message": f"Code does not parse, so it could not be verified: {perr}",
+                    "suggestion": None,
+                }
+            ],
+            "note": (
+                "The snippet failed to parse, so no symbol-level verification was "
+                "possible. Fix the syntax error and re-run."
+            ),
+        }
+
     def installed(top: str):
         if top not in info_by_top:
             info_by_top[top] = provider.get_installed(top)

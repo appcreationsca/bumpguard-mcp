@@ -8,7 +8,7 @@ from ...core.models import ImportRef, Surface, Usage
 from ..base import InstalledInfo, Provider
 from . import fetch
 from .surface import extract_symbols
-from .usage import scan_imports, scan_usage
+from .usage import parse_error, scan_imports, scan_usage
 
 
 class PythonProvider(Provider):
@@ -76,6 +76,9 @@ class PythonProvider(Provider):
 
     def scan_imports(self, code: str) -> list[ImportRef]:
         return scan_imports(code)
+
+    def parse_error(self, code: str) -> str | None:
+        return parse_error(code)
 
     def import_names(self, package: str) -> list[str]:
         return [fetch.import_name_for(package)]

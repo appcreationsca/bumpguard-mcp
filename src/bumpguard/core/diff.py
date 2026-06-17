@@ -87,9 +87,9 @@ def _diff_symbol(old: Symbol, new: Symbol) -> ApiChange | None:
     added_required = sorted((new.required_params & new.valid_keywords()) - old.param_names)
 
     if not breaking_removed and not added_required and not removed_params:
-        # Signatures are call-compatible; nothing actionable.
-        if old.signature == new.signature:
-            return None
+        # Signatures are call-compatible (params unchanged, or removals absorbed
+        # by **kwargs and offset by nothing added). Nothing actionable — we only
+        # report changes that can affect a caller, not e.g. return-type edits.
         return None
 
     if breaking_removed or added_required:
