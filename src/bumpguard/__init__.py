@@ -7,4 +7,4 @@ executing third-party code. Built around pluggable per-ecosystem providers
 (Python, .NET, and Java ship today; npm to follow).
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
