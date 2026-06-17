@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-06-17
+
+### Added
+- Project logo (`assets/logo.svg` + `assets/logo.png`, with a reproducible
+  generator) shown at the top of the README and used by directory listings.
+
 ## [0.1.2] - 2026-06-15
 
 ### Added
@@ -38,7 +44,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Six MCP tools: `check_upgrade`, `diff_versions`, `verify_snippet`,
   `check_import`, `list_symbols`, `list_languages`.
 
-[Unreleased]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/appcreationsca/bumpguard-mcp/releases/tag/v0.1.0
