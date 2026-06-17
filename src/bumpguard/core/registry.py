@@ -37,3 +37,12 @@ def load_default_providers() -> None:
             register(DotNetProvider())
     except Exception:  # pragma: no cover - defensive
         pass
+
+    try:
+        # The Java provider is pure Python (no JDK/Maven needed), so it always
+        # registers; only an import error would skip it.
+        from ..providers.java.provider import JavaProvider
+
+        register(JavaProvider())
+    except Exception:  # pragma: no cover - defensive
+        pass

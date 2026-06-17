@@ -36,8 +36,8 @@ The mechanism differs because each ecosystem ships its public API differently:
 | Ecosystem | Package contains | Read the API surface via |
 | --- | --- | --- |
 | Python | source `.py` | `ast` parse (implemented) |
-| .NET / NuGet | compiled `.dll` | assembly metadata (`System.Reflection.MetadataLoadContext`) |
-| Java / Maven | `.jar` bytecode | `javap` / ASM |
+| .NET / NuGet | compiled `.dll` | assembly metadata via `System.Reflection.MetadataLoadContext` (implemented) |
+| Java / Maven | `.jar` bytecode | pure‑Python `.class` parse — constant pool + access flags + descriptors, no JDK (implemented) |
 | JS/TS / npm | `.d.ts` | TypeScript declaration parse |
 
 Emit `Symbol`s with the same shape the Python provider uses:

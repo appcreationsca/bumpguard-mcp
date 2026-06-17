@@ -67,7 +67,14 @@ def check_upgrade(
     import_roots = set(provider.import_names(package))
 
     def _is_used(u) -> bool:
-        return any(u.dotted_path == r or u.dotted_path.startswith(r + ".") for r in import_roots)
+        # A usage counts as "used" if it points under an importable root for the
+        # package, or if it resolves to a real symbol in either surface. The
+        # latter is essential for ecosystems where the distribution coordinate
+        # differs from the symbol namespace (e.g. Java's group:artifact vs the
+        # actual Java package), where a prefix match alone would never fire.
+        if any(u.dotted_path == r or u.dotted_path.startswith(r + ".") for r in import_roots):
+            return True
+        return u.dotted_path in new.symbols or u.dotted_path in old.symbols
 
     used = bool(report.findings) or any(_is_used(u) for u in usages)
     if not used:

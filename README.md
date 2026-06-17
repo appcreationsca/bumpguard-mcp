@@ -117,10 +117,10 @@ Then ask your agent things like:
                  └───────────────────────┬──────────────────────────────┘
                                          │ Provider interface
                  ┌───────────────────────┴──────────────────────────────┐
-                 │  Python provider  │  .NET (NuGet)   │  Java (planned) │
+                 │  Python provider  │  .NET (NuGet)   │  Java (Maven)   │
                  │  • AST surface    │  • DLL metadata │  • jar bytecode │
-                 │  • usage scanner  │  • Roslyn scan  │                 │
-                 │  • wheel fetch    │  • nupkg fetch  │                 │
+                 │  • usage scanner  │  • Roslyn scan  │  • source scan  │
+                 │  • wheel fetch    │  • nupkg fetch  │  • jar fetch    │
                  └──────────────────────────────────────────────────────┘
 ```
 
@@ -139,7 +139,7 @@ BumpGuard is built around a **pluggable provider interface**. The diff engine, b
 
 - ✅ **Python (PyPI)** — available now.
 - ✅ **.NET (NuGet)** — available now. Reads public API from assembly metadata via reflection-only loading (no code executed); needs the **.NET SDK** (`dotnet`) on PATH. A small helper is built once on first use.
-- 🔜 **Java (Maven)** — extract from `.jar` bytecode.
+- ✅ **Java (Maven)** — available now. Reads public API directly from compiled `.jar` bytecode (constant pool, access flags, descriptors) in **pure Python** — **no JDK or Maven required** and no third‑party code is executed.
 - 🔜 **JS/TS (npm)** — parse `.d.ts` declarations.
 
 Adding an ecosystem means implementing one `Provider` — see [`docs/ADD_A_PROVIDER.md`](docs/ADD_A_PROVIDER.md).
@@ -152,6 +152,15 @@ Adding an ecosystem means implementing one `Provider` — see [`docs/ADD_A_PROVI
 - Reliable signal: **type / method / property removals and additions** (e.g. the `OpenAIClient` → `AzureOpenAIClient` rename is caught as a breaking removal with a suggestion). Parameter-level diffs run only for **unambiguous single-overload** members; overloaded members are tracked by presence (a documented v1 limit).
 - Fully-qualified references are reported confidently; short names resolved via `using` are reported as **lower-confidence "potentially breaking"** to avoid false hard-breaks from namespace collisions.
 - `verify_snippet` is **not supported for .NET in v1** (accurate C# hallucination detection needs semantic binding).
+
+### Java specifics (v1)
+
+- Pass `language: "java"` and identify packages by their Maven **coordinate** `group:artifact` (e.g. `com.google.code.gson:gson`). Example: *"Before upgrading com.google.code.gson:gson to 2.10.1, check whether my code breaks (from_version 2.8.9)."*
+- Supported: `check_upgrade`, `diff_versions`, `list_symbols`, `check_import`.
+- The public API surface is read **directly from `.jar` bytecode** (the jar is a zip of `.class` files; BumpGuard parses the class‑file structure with `struct` — reading metadata, never running it). The target jar is fetched from **Maven Central** (sandboxed, size‑capped, time‑bounded). **No JDK/Maven needed.**
+- **Prefer passing `from_version`** — the "installed" baseline is read from your local `~/.m2` cache, which may not match your project's pinned version.
+- Reliable signal: **type / method / field / constructor removals and additions**, and arity changes. Fully-qualified references hard-break; short names resolved via `import` are reported as **lower-confidence "potentially breaking"** to avoid false hard-breaks from namespace collisions.
+- Documented v1 limits: generics are **erased** in bytecode descriptors (so generic type-argument changes aren't seen); **return-type-only** changes and **varargs removal** are tracked conservatively; **overloaded** members are tracked by presence (per-overload removal isn't detected); multi-release jars use the highest version overlay. `verify_snippet` is **not supported for Java in v1** (accurate hallucination detection needs semantic binding).
 
 ---
 
