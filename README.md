@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/appcreationsca/bumpguard-mcp/main/assets/logo.png" alt="BumpGuard logo" width="120">
+</p>
+
 # BumpGuard 🛡️
 
 <!-- mcp-name: io.github.appcreationsca/bumpguard -->

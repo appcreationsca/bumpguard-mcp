@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BumpGuard logo">
+  <title>BumpGuard</title>
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3fb950"/>
+      <stop offset="1" stop-color="#1a7f37"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield = "Guard" -->
+  <path d="M256 40 L432 104 V268 C432 360 352 432 256 472 C160 432 80 360 80 268 V104 Z"
+        fill="url(#shield)" stroke="#0d1117" stroke-width="12" stroke-linejoin="round"/>
+  <!-- Upward arrow = "Bump" (version upgrade) -->
+  <path d="M256 152 L360 272 H300 V364 H212 V272 H152 Z" fill="#ffffff"/>
+</svg>
