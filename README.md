@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/appcreationsca/bumpguard-mcp/main/assets/logo.png" alt="BumpGuard logo" height="36" align="top"> BumpGuard
+# <img src="https://raw.githubusercontent.com/appcreationsca/bumpguard-mcp/main/assets/logo.png" alt="BumpGuard logo" height="44" align="top">BumpGuard
 
 <!-- mcp-name: io.github.appcreationsca/bumpguard -->
 
