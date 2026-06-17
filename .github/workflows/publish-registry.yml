@@ -1,0 +1,47 @@
+name: Publish to MCP Registry
+
+# Manually (re-)publish the current server.json to the MCP Registry without
+# re-running the PyPI release. Useful when the PyPI package for a version is
+# already published but the registry step needs to run again on its own
+# (e.g. a server.json metadata fix). The main release.yml still publishes to
+# the registry automatically on a version tag.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (blank = use the version already in server.json)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  registry:
+    name: publish to MCP Registry
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for MCP Registry OIDC authentication
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Override version in server.json (optional)
+        if: inputs.version != ''
+        run: |
+          VERSION="${{ inputs.version }}"
+          jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > server.tmp
+          mv server.tmp server.json
+
+      - name: Show server.json
+        run: cat server.json
+
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Authenticate to MCP Registry (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish

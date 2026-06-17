@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.appcreationsca/bumpguard",
   "title": "BumpGuard",
-  "description": "Reports which of your code's API usages break before you upgrade a dependency (Python + .NET + Java).",
+  "description": "Reports which of your code's API usages break when you upgrade a dependency (Python, .NET, Java).",
   "repository": {
     "url": "https://github.com/appcreationsca/bumpguard-mcp",
     "source": "github"
