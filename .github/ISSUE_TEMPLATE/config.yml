@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Documentation & README
+    url: https://github.com/appcreationsca/bumpguard-mcp#readme
+    about: Install, configure your MCP client, and see what each tool does before filing.
+  - name: 🔌 Add a provider (contributor guide)
+    url: https://github.com/appcreationsca/bumpguard-mcp/blob/main/docs/ADD_A_PROVIDER.md
+    about: Want BumpGuard to support a new ecosystem? Start here.
+  - name: 📦 PyPI package
+    url: https://pypi.org/project/bumpguard-mcp/
+    about: Released versions of bumpguard-mcp.

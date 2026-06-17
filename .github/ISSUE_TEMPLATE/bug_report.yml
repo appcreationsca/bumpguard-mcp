@@ -1,0 +1,110 @@
+name: Bug report
+description: Create a report to help us improve
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! 🛡️
+
+        BumpGuard does **static analysis only** — it never installs or executes your
+        dependencies — so the more precise detail you give (package, exact versions,
+        and the code it scanned), the faster we can reproduce.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checklist
+      options:
+        - label: I searched [existing issues](https://github.com/appcreationsca/bumpguard-mcp/issues) and this isn't a duplicate.
+          required: true
+        - label: I'm on the latest `bumpguard-mcp` (or I've noted my version in the Environment section).
+          required: true
+
+  - type: dropdown
+    id: ecosystem
+    attributes:
+      label: Ecosystem / provider
+      description: Which language provider is involved?
+      options:
+        - Python (PyPI)
+        - .NET (NuGet)
+        - Java (Maven)
+        - Core / language-neutral
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: MCP tool
+      description: Which tool produced the wrong result?
+      options:
+        - check_upgrade
+        - diff_versions
+        - verify_snippet
+        - check_import
+        - list_symbols
+        - list_languages
+        - Server startup / install / other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug — what BumpGuard reported and why it's wrong.
+      placeholder: |
+        I ran check_upgrade for <package> <from> -> <to> and expected it to flag/allow
+        <X>, but it reported <Y>.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: >
+        Include the package name, the from/to versions, and the exact tool call (with
+        arguments) or the code snippet that was scanned. A minimal repro is hugely helpful.
+      placeholder: |
+        1. Tool call: check_upgrade(package="pandas", from_version="1.5.3", to_version="2.2.0", code="...")
+        2. ...
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect BumpGuard to report instead?
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Fill in whatever is relevant.
+      value: |
+        - bumpguard-mcp version:
+        - Python version:
+        - OS:
+        - MCP client (Claude Desktop / Cursor / VS Code Copilot / other):
+        - For .NET issues — .NET SDK version:
+        - For Java issues — JDK version (if any; the Java provider is pure-Python and needs none):
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or output
+      description: Paste the MCP server output / stack trace. Automatically formatted as code — no backticks needed.
+      render: shell
+    validations:
+      required: false
