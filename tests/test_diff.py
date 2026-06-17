@@ -39,6 +39,37 @@ def test_added_required_parameter_flagged():
     assert "proxy" in change.added_required_params
 
 
+def test_optional_param_becoming_required_is_breaking():
+    # A param that had a default and loses it (optional -> required) breaks any
+    # caller that relied on the default. This must be flagged, not silently
+    # treated as a compatible signature.
+    from bumpguard.core.models import Kind, Param, Surface, Symbol
+
+    def fn(params):
+        return Symbol(dotted_path="m.f", kind=Kind.FUNCTION, params=params)
+
+    old = Surface("p", "1.0", "python", {"m.f": fn([Param("a"), Param("b", has_default=True)])})
+    new = Surface("p", "2.0", "python", {"m.f": fn([Param("a"), Param("b", has_default=False)])})
+    by = {c.dotted_path: c for c in diff_surfaces(old, new)}
+    assert "m.f" in by, "optional->required parameter change was not detected"
+    assert by["m.f"].change_type == ChangeType.SIGNATURE_CHANGED
+    assert by["m.f"].severity == Severity.BREAKING
+    assert "b" in by["m.f"].added_required_params
+
+
+def test_required_param_staying_required_is_not_a_change():
+    # Guards against a false positive from the optional->required fix: a param
+    # required in both versions must not be reported as newly-required.
+    from bumpguard.core.models import Kind, Param, Surface, Symbol
+
+    def fn(params):
+        return Symbol(dotted_path="m.g", kind=Kind.FUNCTION, params=params)
+
+    old = Surface("p", "1.0", "python", {"m.g": fn([Param("a"), Param("b")])})
+    new = Surface("p", "2.0", "python", {"m.g": fn([Param("a"), Param("b")])})
+    assert "m.g" not in {c.dotted_path: c for c in diff_surfaces(old, new)}
+
+
 def test_added_symbol_is_info():
     by = _changes()
     assert by["acme.core.renamed_thing"].change_type == ChangeType.ADDED

@@ -82,9 +82,15 @@ def _diff_symbol(old: Symbol, new: Symbol) -> ApiChange | None:
     # it; positional breakage is decided precisely at usage-analysis time.
     breaking_removed = removed_params if not new.accepts_kwargs else []
 
-    # Only count keyword-capable additions here; new positional-only/arity
-    # changes are caught by the positional-count check during analysis.
-    added_required = sorted((new.required_params & new.valid_keywords()) - old.param_names)
+    # Keyword-capable params a caller must now supply but didn't have to before —
+    # either brand-new names OR existing params that lost their default (optional
+    # -> required). Both break a caller that omitted the argument. Subtracting
+    # old.required_params (not old.param_names) is what catches the optional ->
+    # required case. New positional-only/arity changes are caught by the
+    # positional-count check during analysis.
+    added_required = sorted(
+        (new.required_params & new.valid_keywords()) - old.required_params
+    )
 
     if not breaking_removed and not added_required and not removed_params:
         # Signatures are call-compatible (params unchanged, or removals absorbed
@@ -98,7 +104,7 @@ def _diff_symbol(old: Symbol, new: Symbol) -> ApiChange | None:
         if breaking_removed:
             bits.append(f"removed parameter(s): {', '.join(breaking_removed)}")
         if added_required:
-            bits.append(f"new required parameter(s): {', '.join(added_required)}")
+            bits.append(f"newly-required parameter(s): {', '.join(added_required)}")
         detail = f"signature of '{new.dotted_path}' changed — " + "; ".join(bits)
     else:
         severity = Severity.POTENTIALLY_BREAKING

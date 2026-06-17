@@ -6,7 +6,11 @@ import pytest
 
 from bumpguard.core.models import Kind
 from bumpguard.providers.dotnet import helper, nuget
-from bumpguard.providers.dotnet.provider import _surface_from_json, resolve_usages
+from bumpguard.providers.dotnet.provider import (
+    DotNetProvider,
+    _surface_from_json,
+    resolve_usages,
+)
 
 
 def test_surface_mapping():
@@ -95,6 +99,45 @@ def test_pick_tfm_skips_empty_framework_dirs(tmp_path):
     (good / "X.dll").write_text("")
     chosen = nuget._pick_tfm_dir(str(base))
     assert chosen.endswith(os.path.join("lib", "netstandard2.0"))
+
+
+def test_safe_segment_rejects_blank_and_traversal():
+    # Legitimate ids/versions pass.
+    for ok in ("Newtonsoft.Json", "newtonsoft.json", "13.0.3", "2.0.0-beta1", "a_b.c-d"):
+        assert nuget._safe_segment(ok) is True
+    # Blank / path-escaping / traversal inputs are rejected.
+    for bad in ("", "..", "a..b", "../secret", "..\\secret", "a/b", "a\\b", "a b", "a\tb", "a;b"):
+        assert nuget._safe_segment(bad) is False
+
+
+def test_blank_package_is_not_reported_installed(tmp_path, monkeypatch):
+    """A blank id must not make the cache root itself look like an installed
+    package (``os.path.join(root, "")`` == root, whose children would otherwise
+    be mistaken for versions)."""
+    root = tmp_path / "packages"
+    (root / "newtonsoft.json" / "13.0.3").mkdir(parents=True)
+    monkeypatch.setattr(nuget, "_packages_root", lambda: str(root))
+
+    assert nuget.installed_versions("") == []
+    assert nuget.latest_installed("") is None
+    assert DotNetProvider().get_installed("") is None
+    # A real package in the same cache still resolves.
+    assert nuget.latest_installed("Newtonsoft.Json") == "13.0.3"
+
+
+def test_unsafe_package_or_version_cannot_escape_cache(tmp_path, monkeypatch):
+    """Caller-supplied ids/versions are interpolated into cache paths, so a
+    ``..`` traversal must be refused before any filesystem lookup escapes root."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    # A sibling dir that a traversal would reach if the guard were missing.
+    (tmp_path / "secret-pkg" / "9.9.9").mkdir(parents=True)
+    monkeypatch.setattr(nuget, "_packages_root", lambda: str(cache))
+
+    assert nuget.installed_versions(os.path.join("..", "secret-pkg")) == []
+    assert nuget.installed_surface_dir("pkg", os.path.join("..", "..", "x")) is None
+    assert nuget.fetch_version_dir("pkg", "..") is None
+    assert nuget.fetch_version_dir(os.path.join("..", "evil"), "1.0.0") is None
 
 
 @pytest.mark.skipif(not helper.dotnet_available(), reason="dotnet not installed")
