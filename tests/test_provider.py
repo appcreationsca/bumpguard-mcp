@@ -16,6 +16,14 @@ def test_check_import_missing_package_suggests():
     assert "pytest" in result.get("suggestions", [])
 
 
+def test_check_import_blank_name_is_graceful():
+    # An empty/whitespace distribution name must not raise out of a tool — it
+    # should degrade to a clean "not installed" result.
+    for blank in ("", "   "):
+        result = service.check_import("python", blank)
+        assert result["installed"] is False
+
+
 def test_verify_snippet_flags_unknown_import():
     code = "import totally_not_a_real_pkg_xyz\n"
     result = service.verify_snippet("python", code)

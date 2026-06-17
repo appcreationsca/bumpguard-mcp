@@ -58,12 +58,18 @@ def _group_path(group: str) -> str:
 
 
 # Maven version strings are free-form, but they are interpolated straight into a
-# Maven Central URL path. Reject anything that could escape the intended
-# {group}/{artifact}/{version}/ segment (path traversal, separators, whitespace,
-# or control chars) before building a request. Legitimate versions only use
-# alphanumerics plus ``. _ -`` (e.g. ``2.11.0``, ``1.0.0-RC1``, ``3.0-SNAPSHOT``).
+# Maven Central URL path (and a local ~/.m2 filesystem path). Reject anything
+# that could escape the intended {group}/{artifact}/{version}/ segment: path
+# separators, whitespace, control chars, or a ".." traversal sequence. Note that
+# "." is a legal version char, so ".." must be rejected explicitly rather than by
+# the character class. Legitimate versions only use alphanumerics plus ``. _ -``
+# (e.g. ``2.11.0``, ``1.0.0-RC1``, ``3.0-SNAPSHOT``).
 def _safe_version(version: str) -> bool:
-    return bool(version) and re.fullmatch(r"[A-Za-z0-9_.\-]+", version) is not None
+    return (
+        bool(version)
+        and ".." not in version
+        and re.fullmatch(r"[A-Za-z0-9_.\-]+", version) is not None
+    )
 
 
 # ---- Maven ComparableVersion (faithful port of the canonical algorithm) ------

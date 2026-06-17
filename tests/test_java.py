@@ -381,7 +381,8 @@ def test_safe_version_rejects_path_tricks():
     for good in ("2.10.1", "1.0.0-RC1", "3.0-SNAPSHOT", "1.0.0.Final", "20030203.000550"):
         assert maven._safe_version(good) is True
     # Anything that could escape the {group}/{artifact}/{version}/ URL segment is rejected.
-    for bad in ("", "../1.0", "1.0/../../etc", "a\\b", "1 0", "1\t0", "1.0\n", "a;b", "%2e%2e"):
+    for bad in ("", "../1.0", "1.0/../../etc", "a\\b", "1 0", "1\t0", "1.0\n", "a;b", "%2e%2e",
+                "..", "a..b", "1..0", "...."):
         assert maven._safe_version(bad) is False
 
 
