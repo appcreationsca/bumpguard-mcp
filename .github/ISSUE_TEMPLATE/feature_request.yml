@@ -1,0 +1,71 @@
+name: Feature request
+description: Suggest an idea for this project
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement to BumpGuard! 🛡️
+
+        If you're proposing support for a **new ecosystem**, the
+        [Add a provider guide](https://github.com/appcreationsca/bumpguard-mcp/blob/main/docs/ADD_A_PROVIDER.md)
+        describes what's involved — that context helps us scope the request.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checklist
+      options:
+        - label: I searched [existing issues](https://github.com/appcreationsca/bumpguard-mcp/issues) and this isn't already requested.
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: What part of BumpGuard does this touch?
+      options:
+        - New ecosystem / provider (e.g. npm, Go, Rust)
+        - Existing provider — Python (PyPI)
+        - Existing provider — .NET (NuGet)
+        - Existing provider — Java (Maven)
+        - MCP tool behavior or output
+        - Core diff / breaking-change analysis
+        - Docs
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Is your request related to a problem or limitation? Describe the pain clearly.
+      placeholder: "I'm always frustrated when ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like BumpGuard to do? Sketch the tool, output, or behavior you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or other approaches you've thought about.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Example packages, code, MCP clients, or anything else that helps.
+    validations:
+      required: false
