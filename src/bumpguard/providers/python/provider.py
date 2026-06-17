@@ -8,7 +8,7 @@ from ...core.models import ImportRef, Surface, Usage
 from ..base import InstalledInfo, Provider
 from . import fetch
 from .surface import extract_symbols
-from .usage import scan_imports, scan_usage
+from .usage import parse_error, scan_imports, scan_usage
 
 
 class PythonProvider(Provider):
@@ -17,6 +17,8 @@ class PythonProvider(Provider):
     file_extensions = (".py",)
 
     def get_installed(self, package: str) -> InstalledInfo | None:
+        if not package or not package.strip():
+            return None
         version = fetch.installed_version(package)
         import_name = fetch.import_name_for(package)
         located = fetch.locate_installed_source(import_name)
@@ -34,6 +36,8 @@ class PythonProvider(Provider):
         return out
 
     def get_installed_surface(self, package: str) -> Surface | None:
+        if not package or not package.strip():
+            return None
         import_name = fetch.import_name_for(package)
         located = fetch.locate_installed_source(import_name)
         if located is None:
@@ -76,6 +80,9 @@ class PythonProvider(Provider):
 
     def scan_imports(self, code: str) -> list[ImportRef]:
         return scan_imports(code)
+
+    def parse_error(self, code: str) -> str | None:
+        return parse_error(code)
 
     def import_names(self, package: str) -> list[str]:
         return [fetch.import_name_for(package)]

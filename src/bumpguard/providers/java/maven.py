@@ -57,6 +57,21 @@ def _group_path(group: str) -> str:
     return group.replace(".", "/")
 
 
+# Maven version strings are free-form, but they are interpolated straight into a
+# Maven Central URL path (and a local ~/.m2 filesystem path). Reject anything
+# that could escape the intended {group}/{artifact}/{version}/ segment: path
+# separators, whitespace, control chars, or a ".." traversal sequence. Note that
+# "." is a legal version char, so ".." must be rejected explicitly rather than by
+# the character class. Legitimate versions only use alphanumerics plus ``. _ -``
+# (e.g. ``2.11.0``, ``1.0.0-RC1``, ``3.0-SNAPSHOT``).
+def _safe_version(version: str) -> bool:
+    return (
+        bool(version)
+        and ".." not in version
+        and re.fullmatch(r"[A-Za-z0-9_.\-]+", version) is not None
+    )
+
+
 # ---- Maven ComparableVersion (faithful port of the canonical algorithm) ------
 
 _QUALIFIERS = ["alpha", "beta", "milestone", "rc", "snapshot", "", "sp"]
@@ -264,7 +279,7 @@ def installed_jar_path(
 ) -> tuple[str, str] | None:
     """Return ``(jar_path, version)`` for an installed artifact, or None."""
     version = version or latest_installed(group, artifact)
-    if version is None:
+    if version is None or not _safe_version(version):
         return None
     jar = os.path.join(_artifact_dir(group, artifact), version, f"{artifact}-{version}.jar")
     return (jar, version) if os.path.isfile(jar) else None
@@ -328,6 +343,8 @@ def list_versions_online(group: str, artifact: str) -> list[str]:
 
 
 def fetch_pom(group: str, artifact: str, version: str) -> bytes | None:
+    if not _safe_version(version):
+        return None
     url = f"{_CENTRAL}/{_group_path(group)}/{artifact}/{version}/{artifact}-{version}.pom"
     return _get(url, _MAX_POM)
 
@@ -375,5 +392,7 @@ def fetch_jar(group: str, artifact: str, version: str) -> bytes | None:
 
     Returns the jar bytes (held in memory only), or None on any failure.
     """
+    if not _safe_version(version):
+        return None
     url = f"{_CENTRAL}/{_group_path(group)}/{artifact}/{version}/{artifact}-{version}.jar"
     return _get(url, _MAX_JAR)

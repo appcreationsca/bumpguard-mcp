@@ -4,9 +4,11 @@
 # the Python package and runs the MCP server over stdio.
 #
 # Note: the .NET (NuGet) provider is intentionally NOT bundled here (it needs the
-# .NET SDK). The Python provider and all six MCP tools work; `list_languages`
-# will simply report only `python` in this image. For full Python + .NET support,
-# `pip install bumpguard-mcp` into an environment that has the .NET SDK.
+# .NET SDK). The Python and Java providers are pure Python and need no extra
+# toolchain, so all six MCP tools work and `list_languages` reports both `java`
+# and `python` in this image (Java fetches from Maven Central and reads bytecode
+# without a JDK). For .NET support too, `pip install bumpguard-mcp` into an
+# environment that also has the .NET SDK.
 FROM python:3.12-slim
 
 WORKDIR /app

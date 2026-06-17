@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import tempfile
 import urllib.request
@@ -18,6 +19,22 @@ import zipfile
 _FLAT = "https://api.nuget.org/v3-flatcontainer"
 _HTTP_TIMEOUT = 60
 _MAX_NUPKG = 200 * 1024 * 1024
+
+
+# A NuGet id/version is interpolated into both nuget.org URLs and local
+# ~/.nuget cache paths (``{root}/{id}/{version}``). Reject anything that could
+# escape the intended segment — path separators, whitespace, control chars, or a
+# ".." traversal — and reject blank names so a missing/empty argument can't make
+# the cache root itself look like an installed package. "." is legal in both ids
+# and versions, so ".." must be rejected explicitly rather than by the character
+# class. Legitimate NuGet ids/versions only use alphanumerics plus ``. _ -``
+# (e.g. "Newtonsoft.Json", "13.0.3", "2.0.0-beta1").
+def _safe_segment(value: str) -> bool:
+    return (
+        bool(value)
+        and ".." not in value
+        and re.fullmatch(r"[A-Za-z0-9_.\-]+", value) is not None
+    )
 
 # Preference order when a package ships multiple target frameworks. The compile
 # surface lives in ref/ when present, otherwise lib/.
@@ -41,6 +58,8 @@ def _version_key(v: str):
 
 
 def installed_versions(package: str) -> list[str]:
+    if not _safe_segment(package):
+        return []
     pdir = os.path.join(_packages_root(), package.lower())
     if not os.path.isdir(pdir):
         return []
@@ -90,8 +109,10 @@ def _has_dll(d: str) -> bool:
 
 def installed_surface_dir(package: str, version: str | None = None) -> tuple[str, str] | None:
     """Return (tfm_dir, version) for an installed package, or None."""
+    if not _safe_segment(package):
+        return None
     version = version or latest_installed(package)
-    if version is None:
+    if version is None or not _safe_segment(version):
         return None
     base = os.path.join(_packages_root(), package.lower(), version)
     if not os.path.isdir(base):
@@ -101,6 +122,8 @@ def installed_surface_dir(package: str, version: str | None = None) -> tuple[str
 
 
 def list_versions_online(package: str) -> list[str]:
+    if not _safe_segment(package):
+        return []
     url = f"{_FLAT}/{package.lower()}/index.json"
     try:
         with urllib.request.urlopen(url, timeout=_HTTP_TIMEOUT) as resp:
@@ -118,6 +141,8 @@ def fetch_version_dir(package: str, version: str) -> tuple[str, str] | None:
     The caller owns ``tmp`` and must remove it. Returns None on failure (and
     cleans up after itself in that case).
     """
+    if not _safe_segment(package) or not _safe_segment(version):
+        return None
     pid = package.lower()
     url = f"{_FLAT}/{pid}/{version}/{pid}.{version}.nupkg"
     tmp = tempfile.mkdtemp(prefix="bumpguard_nuget_")

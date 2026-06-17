@@ -149,33 +149,6 @@ def _collect_reexports(
     is_pkg_init: bool,
     package_name: str,
     aliases: list[tuple[str, str]],
-) -> None:
-    """Record ``from ... import ...`` edges that stay inside this package so the
-    re-exported name can be matched the way callers actually import it."""
-    if node.level and node.level > 0:
-        anchor = _resolve_anchor(current_module, node.level, is_pkg_init)
-        target_mod = f"{anchor}.{node.module}" if node.module else anchor
-    elif node.module and (node.module == package_name or node.module.startswith(package_name + ".")):
-        target_mod = node.module
-    else:
-        return  # third-party / stdlib import — not part of this package's surface
-
-    for alias in node.names:
-        if alias.name == "*":
-            continue
-        exposed = alias.asname or alias.name
-        alias_path = f"{current_module}.{exposed}"
-        target_path = f"{target_mod}.{alias.name}"
-        if alias_path != target_path:
-            aliases.append((alias_path, target_path))
-
-
-def _collect_reexports(
-    node: ast.ImportFrom,
-    current_module: str,
-    is_pkg_init: bool,
-    package_name: str,
-    aliases: list[tuple[str, str]],
     is_public,
 ) -> None:
     """Record ``from ... import ...`` edges that stay inside this package so the

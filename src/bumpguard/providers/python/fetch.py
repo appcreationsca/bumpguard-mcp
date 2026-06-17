@@ -28,6 +28,10 @@ def installed_version(name: str) -> str | None:
             return ilm.version(candidate)
         except ilm.PackageNotFoundError:
             continue
+        except ValueError:
+            # importlib.metadata raises ValueError for a blank/invalid name —
+            # treat it as "not installed" rather than letting it escape a tool.
+            return None
     return None
 
 
@@ -38,6 +42,8 @@ def import_name_for(dist_name: str) -> str:
             text = ilm.distribution(candidate).read_text("top_level.txt")
         except ilm.PackageNotFoundError:
             continue
+        except ValueError:
+            break  # blank/invalid name — fall through to the default mapping
         if text:
             for line in text.splitlines():
                 line = line.strip()

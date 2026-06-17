@@ -17,6 +17,17 @@ This is deliberately a robust heuristic scanner, not a full Java grammar: it
 strips comments and string/char/text-block literals first (so their contents
 can't be mistaken for code), then walks the cleaned text. It is honest about
 what it can't see (generics are ignored; see provider notes).
+
+Known v1 limitations (intentional, low-impact):
+
+- The scanner does not distinguish a *use* of a name from its *declaration*. A
+  method or constructor declaration (``void m(...)``) is captured as a ``m``
+  call ref, and an ``import a.b.C;`` line contributes a ``C`` member ref. These
+  spurious self-references resolve to single-segment / unqualified names, which
+  the provider caps at *candidate* confidence — so they can never escalate to a
+  definite (hard) breakage, only ever to a "potentially breaking" hint at worst.
+  A stricter declaration-vs-reference pass is deferred to avoid regressing the
+  comment/literal stripping that keeps the scanner safe.
 """
 
 from __future__ import annotations

@@ -100,7 +100,7 @@ def _finding_for(usage: Usage, change: ApiChange, new: Surface) -> Finding | Non
                 line=usage.line,
                 severity=Severity.POTENTIALLY_BREAKING,
                 message=(
-                    f"You use '{path}', which now requires new parameter(s): "
+                    f"You use '{path}', which now requires parameter(s): "
                     f"{', '.join(change.added_required_params)}."
                 ),
                 suggestion=f"Provide {', '.join(change.added_required_params)} when calling '{path}'.",

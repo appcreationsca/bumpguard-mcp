@@ -6,7 +6,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-06-15
+## [0.2.1] - 2026-06-17
+
+### Fixed
+- **Optional → required parameter changes are now detected.** A function,
+  method, or constructor whose parameter loses its default (e.g.
+  `f(a, b=1)` → `f(a, b)`) was previously reported as **safe to upgrade**, even
+  though callers relying on the default break. It is now correctly classified as
+  a breaking signature change. Affects the Python and .NET providers.
+- **No more false hard-breaks on argument spreads.** A call such as
+  `f(a, *rest)` against a narrowed signature is no longer asserted as a definite
+  over-arity break — it is valid when `rest` is empty. Only calls that are
+  *certainly* over-arity (enough concrete positional arguments on their own) now
+  hard-break; uncertain cases are surfaced honestly instead of as false alarms.
+  (Python usage scanner.)
+- **.NET package id/version are now validated** before being used to build local
+  cache paths and download URLs, matching the guard the Java provider already
+  had. This prevents a blank package id from being mis-reported as "installed"
+  and blocks `..`-style path traversal in cache lookups.
 
 ### Added
 - **Java (Maven) provider** — a third shipping ecosystem. Reads a package's
@@ -69,7 +86,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Six MCP tools: `check_upgrade`, `diff_versions`, `verify_snippet`,
   `check_import`, `list_symbols`, `list_languages`.
 
-[Unreleased]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/appcreationsca/bumpguard-mcp/compare/v0.1.1...v0.1.2

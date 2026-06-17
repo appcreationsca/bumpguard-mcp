@@ -92,12 +92,21 @@ class _UsageCollector(ast.NodeVisitor):
         resolved = self._resolve(node.func)
         if resolved:
             kwargs = {kw.arg for kw in node.keywords if kw.arg}
+            # Count only *concrete* positional args. A ``*args`` spread
+            # (ast.Starred) contributes an unknown number (0..N), so counting it
+            # as exactly 1 would let us falsely assert "too many positional
+            # arguments" on calls like ``f(a, *xs)`` that are fine when xs is
+            # empty. Excluding Starred makes this a guaranteed lower bound, so the
+            # arity hard-break only fires when the call is *certainly* over-arity.
+            positional_count = sum(
+                1 for a in node.args if not isinstance(a, ast.Starred)
+            )
             self._add(
                 resolved,
                 node.func,
                 is_call=True,
                 call_kwargs=kwargs,
-                positional_count=len(node.args),
+                positional_count=positional_count,
             )
             self._mark_consumed(node.func)
         self.generic_visit(node)
@@ -178,13 +187,23 @@ def scan_usage(code: str, package: str | None = None) -> list[Usage]:
     return collector.usages
 
 
+def parse_error(code: str) -> str | None:
+    """Return the Python ``SyntaxError`` message if ``code`` doesn't parse, else
+    None. Used so ``verify_snippet`` doesn't report broken code as ``verified``."""
+    try:
+        ast.parse(code)
+    except SyntaxError as exc:
+        where = f" (line {exc.lineno})" if exc.lineno else ""
+        return f"{exc.msg}{where}"
+    return None
+
+
 def scan_imports(code: str) -> list[ImportRef]:
     """Return the third-party imports in ``code`` (top package + fq path)."""
     try:
         tree = ast.parse(code)
     except SyntaxError:
         return []
-
     refs: list[ImportRef] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

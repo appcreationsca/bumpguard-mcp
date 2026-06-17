@@ -90,3 +90,40 @@ def test_compatible_call_produces_no_finding(tmp_path):
         "import m\nm.f(1)\n",
     )
     assert report["safe_to_upgrade"] is True
+
+
+def test_optional_param_becoming_required_is_flagged(tmp_path):
+    # A parameter that loses its default (optional -> required) breaks callers
+    # that relied on the default. Previously this slipped through as "safe".
+    report = _report(
+        tmp_path,
+        "def f(a, b=1):\n    return a\n",
+        "def f(a, b):\n    return a\n",
+        "import m\nm.f(1)\n",
+    )
+    assert _sev(report, "m.f") == "potentially_breaking"
+
+
+def test_star_args_spread_is_not_a_false_hard_break(tmp_path):
+    # `m.f(1, *rest)` against a narrowed signature must NOT be asserted as a hard
+    # break: `rest` may be empty, so the call can be perfectly valid. We can't be
+    # certain, so it must not claim a definite breakage.
+    report = _report(
+        tmp_path,
+        "def f(a, b):\n    return a\n",
+        "def f(a):\n    return a\n",
+        "import m\nm.f(1, *rest)\n",
+    )
+    assert _sev(report, "m.f") != "breaking"
+
+
+def test_star_args_with_enough_concrete_positionals_still_breaks(tmp_path):
+    # Even with a spread, two *concrete* positionals already exceed a 1-arg
+    # signature, so this is a certain over-arity break regardless of the spread.
+    report = _report(
+        tmp_path,
+        "def f(a, b, c):\n    return a\n",
+        "def f(a):\n    return a\n",
+        "import m\nm.f(1, 2, *rest)\n",
+    )
+    assert _sev(report, "m.f") == "breaking"

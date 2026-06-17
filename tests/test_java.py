@@ -376,6 +376,26 @@ def test_parse_coordinate():
     assert maven.parse_coordinate("group:") is None
 
 
+def test_safe_version_rejects_path_tricks():
+    # Legit Maven versions are accepted.
+    for good in ("2.10.1", "1.0.0-RC1", "3.0-SNAPSHOT", "1.0.0.Final", "20030203.000550"):
+        assert maven._safe_version(good) is True
+    # Anything that could escape the {group}/{artifact}/{version}/ URL segment is rejected.
+    for bad in ("", "../1.0", "1.0/../../etc", "a\\b", "1 0", "1\t0", "1.0\n", "a;b", "%2e%2e",
+                "..", "a..b", "1..0", "...."):
+        assert maven._safe_version(bad) is False
+
+
+def test_fetch_rejects_unsafe_version_without_network(monkeypatch):
+    # The version guard must short-circuit before any HTTP request is attempted.
+    def _boom(*_a, **_k):
+        raise AssertionError("network must not be touched for an unsafe version")
+
+    monkeypatch.setattr(maven, "_get", _boom)
+    assert maven.fetch_jar("com.example", "lib", "../evil") is None
+    assert maven.fetch_pom("com.example", "lib", "1.0/../../x") is None
+
+
 def test_pom_info_packaging_and_relocation():
     assert maven.pom_info(b"<project><packaging>jar</packaging></project>") == ("jar", None)
     assert maven.pom_info(b"<project><packaging>pom</packaging></project>") == ("pom", None)
