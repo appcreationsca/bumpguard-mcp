@@ -8,6 +8,8 @@ data-in / data-out and is shared by every provider.
 from __future__ import annotations
 
 import difflib
+from bisect import bisect_left
+from collections import Counter, defaultdict
 
 from .models import ApiChange, ChangeType, Severity, Surface, Symbol
 
@@ -126,21 +128,115 @@ def _diff_symbol(old: Symbol, new: Symbol) -> ApiChange | None:
 def _rename_hints(
     removed: set[str], added: set[str], old: Surface, new: Surface
 ) -> dict[str, str]:
-    """Best-effort: pair each removed symbol with a similar added one."""
-    hints: dict[str, str] = {}
-    added_by_leaf: dict[str, list[str]] = {}
-    for a in added:
-        leaf = a.rsplit(".", 1)[-1]
-        added_by_leaf.setdefault(leaf, []).append(a)
+    """Suggest likely moves/renames without comparing every pair of paths.
 
-    for r in removed:
-        leaf = r.rsplit(".", 1)[-1]
-        # Same leaf name in a different module/namespace -> very likely a move.
-        if leaf in added_by_leaf:
-            hints[r] = added_by_leaf[leaf][0]
+    Exact leaf-name matches are found through an index. Fuzzy candidates are
+    retrieved by shared character bigrams, capped, then ranked by leaf-name
+    and parent-path similarity. This keeps the expensive string comparisons
+    local while avoiding the old removed × added SequenceMatcher scan.
+    """
+    hints: dict[str, str] = {}
+    if not removed or not added:
+        return hints
+
+    def parts(path: str) -> tuple[str, str]:
+        parent, _, leaf = path.rpartition(".")
+        return parent, leaf
+
+    def normalized(value: str) -> str:
+        return "".join(char for char in value.casefold() if char.isalnum())
+
+    def grams(value: str) -> set[str]:
+        value = normalized(value)
+        if len(value) < 2:
+            return {value} if value else set()
+        return {value[index:index + 2] for index in range(len(value) - 1)}
+
+    added_by_leaf: dict[str, list[str]] = defaultdict(list)
+    added_by_gram: dict[str, list[str]] = defaultdict(list)
+    added_parts: dict[str, tuple[str, str]] = {}
+    for path in sorted(added):
+        parent, leaf = parts(path)
+        added_parts[path] = (parent, leaf)
+        added_by_leaf[leaf].append(path)
+        for gram in grams(leaf):
+            added_by_gram[gram].append(path)
+
+    # Reuse parent-path comparisons: large packages often have many symbols
+    # in a small number of modules.
+    parent_similarity: dict[tuple[str, str], float] = {}
+
+    def parent_ratio(left: str, right: str) -> float:
+        key = (left, right)
+        ratio = parent_similarity.get(key)
+        if ratio is None:
+            ratio = difflib.SequenceMatcher(None, left, right, autojunk=False).ratio()
+            parent_similarity[key] = ratio
+        return ratio
+
+    max_candidates = 64
+    # Keep the total number of votes per removed symbol bounded by the number
+    # of its distinct bigrams times this small posting limit.
+    max_gram_posting = 32
+    for removed_path in sorted(removed):
+        old_parent, old_leaf = parts(removed_path)
+        old_kind = old.symbols[removed_path].kind
+        same_leaf = added_by_leaf.get(old_leaf, [])
+        # Prefer same-kind candidates when duplicate leaf names exist.
+        if same_leaf:
+            # The leaf bucket can be very large for names such as ``__init__``.
+            # Inspect only nearby paths in the sorted bucket before ranking.
+            middle = bisect_left(same_leaf, removed_path)
+            nearby = same_leaf[
+                max(0, middle - max_candidates // 2):middle + max_candidates // 2
+            ]
+            compatible = [path for path in nearby if new.symbols[path].kind == old_kind]
+            candidates = compatible or nearby
+            hints[removed_path] = max(
+                candidates,
+                key=lambda path: (
+                    parent_ratio(old_parent, added_parts[path][0]),
+                    path,
+                ),
+            )
             continue
-        # Otherwise fall back to fuzzy matching on the full dotted path.
-        match = difflib.get_close_matches(r, list(added), n=1, cutoff=0.8)
-        if match:
-            hints[r] = match[0]
+
+        # Candidate generation is sparse: only symbols sharing leaf-name
+        # bigrams are ranked. Very common bigrams act like stop words: skipping
+        # their postings bounds candidate collection even for huge packages.
+        # Kind mismatches are discarded where possible.
+        votes: Counter[str] = Counter()
+        for gram in grams(old_leaf):
+            posting = added_by_gram.get(gram, ())
+            if len(posting) <= max_gram_posting:
+                votes.update(posting)
+        compatible_votes = {
+            path: count
+            for path, count in votes.items()
+            if new.symbols[path].kind == old_kind
+        }
+        if not compatible_votes:
+            compatible_votes = dict(votes)
+        if not compatible_votes:
+            continue
+
+        shortlist = sorted(
+            compatible_votes,
+            key=lambda path: (-compatible_votes[path], path),
+        )[:max_candidates]
+        old_leaf_norm = normalized(old_leaf)
+        ranked: list[tuple[float, str]] = []
+        for path in shortlist:
+            candidate_parent, candidate_leaf = added_parts[path]
+            leaf_ratio = difflib.SequenceMatcher(
+                None, old_leaf_norm, normalized(candidate_leaf), autojunk=False
+            ).ratio()
+            score = 0.8 * leaf_ratio + 0.2 * parent_ratio(old_parent, candidate_parent)
+            ranked.append((score, path))
+
+        score, match = max(ranked, key=lambda item: (item[0], item[1]))
+        # Require a strong leaf match; shared package prefixes alone should not
+        # turn unrelated API removals into rename suggestions.
+        if score >= 0.78:
+            hints[removed_path] = match
     return hints
